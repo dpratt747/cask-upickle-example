@@ -14,10 +14,10 @@ private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserI
   override def insertUser(user: User): Unit =
     inMemoryStore.get(user.id) match
       case Some(user) =>
-        val newUser = user.copy(queryCount = user.queryCount + 1)
+        val newUser = user.copy(queryCount = user.queryCount.incrementByOne())
         inMemoryStore.update(user.id, newUser)
       case None =>
-        inMemoryStore.addOne(user.id, user.copy(queryCount = 1))
+        inMemoryStore.addOne(user.id, user.copy(queryCount = QueryCount(1)))
 
   override def getAllUsers: scala.collection.mutable.Map[UserId, User] = inMemoryStore
 

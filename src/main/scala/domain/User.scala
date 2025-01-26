@@ -2,6 +2,6 @@ package domain
 
 final case class User(
                        id: UserId,
-                       name: String,
-                       queryCount: Int = 0
+                       name: UserName,
+                       queryCount: QueryCount = QueryCount(0)
                      )

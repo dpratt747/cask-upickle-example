@@ -1,7 +1,7 @@
 package endpoints
 
 import cask.util.Logger
-import domain.{JsonResponse, User, UserId}
+import domain.{JsonResponse, User}
 import endpoints.*
 import program.UserProgramAlg
 
@@ -11,9 +11,9 @@ private class UserEndpoints(program: UserProgramAlg, logger: Logger) extends cas
   def postUser(user_id: ujson.Value, name: ujson.Value) = {
     logger.debug(s"[POST] /user request received")
     (for {
-      uuid <- convertToUserId(user_id)
+      userId <- convertToUserId(user_id)
       userName <- convertToUserName(name)
-      user = User(UserId(uuid), userName)
+      user = User(userId, userName)
       _ = program.createNewUser(user)
     } yield user).fold(
       error =>
@@ -26,8 +26,8 @@ private class UserEndpoints(program: UserProgramAlg, logger: Logger) extends cas
   def getUsers(userId: String) = {
     logger.debug(s"[GET] /user/$userId request received")
     (for {
-      uuid <- convertToUserId(userId)
-      user = program.getUser(UserId(uuid))
+      userId <- convertToUserId(userId)
+      user = program.getUser(userId)
     } yield user).fold(
       error => cask.Response(jsonify(JsonResponse(error)), 400),
       {

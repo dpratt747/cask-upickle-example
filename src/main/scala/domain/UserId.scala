@@ -2,4 +2,8 @@ package domain
 
 import java.util.UUID
 
-final case class UserId(id: UUID) extends AnyVal
+opaque type UserId = UUID
+
+object UserId {
+  def apply(value: UUID): UserId = value
+}
