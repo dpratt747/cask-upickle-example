@@ -2,31 +2,33 @@ package db
 
 import domain.*
 
+import scala.concurrent.{ExecutionContext, Future}
+
 trait DatabaseAlg {
-  def insertUser(user: domain.User): Unit
+  def insertUser(user: domain.User): Future[Unit]
 
-  def getUser(userId: UserId): Option[User]
+  def getUser(userId: UserId): Future[Option[User]]
 
-  def getAllUsers: scala.collection.mutable.Map[UserId, User]
+  def getAllUsers: Future[scala.collection.mutable.Map[UserId, User]]
 }
 
-private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserId, User]) extends DatabaseAlg {
-  override def insertUser(user: User): Unit =
+private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserId, User])(implicit val ec: ExecutionContext) extends DatabaseAlg {
+  override def insertUser(user: User): Future[Unit] =
     inMemoryStore.get(user.id) match
       case Some(user) =>
         val newUser = user.copy(queryCount = user.queryCount.incrementByOne())
-        inMemoryStore.update(user.id, newUser)
+        Future(inMemoryStore.update(user.id, newUser))
       case None =>
-        inMemoryStore.addOne(user.id, user.copy(queryCount = QueryCount(1)))
+        Future(inMemoryStore.addOne(user.id, user.copy(queryCount = QueryCount(1))))
 
-  override def getAllUsers: scala.collection.mutable.Map[UserId, User] = inMemoryStore
+  override def getAllUsers: Future[scala.collection.mutable.Map[UserId, User]] = Future(inMemoryStore)
 
-  override def getUser(userId: UserId): Option[User] =
-    inMemoryStore.get(userId)
+  override def getUser(userId: UserId): Future[Option[User]] =
+    Future(inMemoryStore.get(userId))
 }
 
 object InMemoryDatabase {
-  def make(state: scala.collection.mutable.Map[UserId, User]): DatabaseAlg = {
+  def make(state: scala.collection.mutable.Map[UserId, User])(implicit ec: ExecutionContext): DatabaseAlg = {
     new InMemoryDatabase(state)
   }
 }
