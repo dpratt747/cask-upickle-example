@@ -1,52 +1,64 @@
 package endpoints
 
+import cask.Response
 import cask.util.Logger
 import domain.{JsonResponse, User}
-import endpoints.*
 import program.UserProgramAlg
+import ujson.Obj
 
-private class UserEndpoints(program: UserProgramAlg, logger: Logger) extends cask.Routes {
+import scala.concurrent.ExecutionContext
+
+private class UserEndpoints(program: UserProgramAlg, logger: Logger)(implicit val ec: ExecutionContext) extends cask.Routes {
 
   @cask.postJson("/user")
-  def postUser(user_id: ujson.Value, name: ujson.Value) = {
+  def postUser(user_id: ujson.Value, name: ujson.Value): Response[Obj] = {
     logger.debug(s"[POST] /user request received")
     (for {
       userId <- convertToUserId(user_id)
       userName <- convertToUserName(name)
       user = User(userId, userName)
-      _ = program.createNewUser(user)
     } yield user).fold(
       error =>
         cask.Response(jsonify(JsonResponse(error)), 400),
-      success => cask.Response(jsonify(JsonResponse(s"No errors occurred. User stored successfully [$success]")), 200)
+      user =>
+        program.createNewUser(user)
+          .map(_ => cask.Response(jsonify(JsonResponse(s"No errors occurred. User stored successfully [$user]")), 200))
+          .mapFutureFailure(returnInternalServerErrorOnFailure)
+          .awaitResult()
     )
   }
 
   @cask.getJson("/user/:userId")
-  def getUser(userId: String) = {
+  def getUser(userId: String): Response[ujson.Obj] = {
     logger.debug(s"[GET] /user/$userId request received")
-    (for {
-      userId <- convertToUserId(userId)
-      user = program.getUser(userId)
-    } yield user).fold(
+    convertToUserId(userId).fold(
       error => cask.Response(jsonify(JsonResponse(error)), 400),
-      {
-        case Some(user) => cask.Response(jsonify(JsonResponse(s"No errors occurred. User found successfully [$user]")), 200)
-        case None => cask.Response(jsonify(JsonResponse(s"No errors occurred but no User was found")), 404)
-      }
+      userId => program.getUser(userId).map {
+          case Some(user) => cask.Response(jsonify(JsonResponse(s"No errors occurred. User found successfully [$user]")), 200)
+          case None => cask.Response(jsonify(JsonResponse(s"No errors occurred but no User was found")), 404)
+        }
+        .mapFutureFailure(returnInternalServerErrorOnFailure)
+        .awaitResult()
     )
   }
 
   @cask.getJson("/users")
-  def getUsers() =
+  def getUsers(): Response[Obj] = {
     logger.debug(s"[GET] /users request received")
-    cask.Response(jsonify(JsonResponse(program.getAllUsers.toString())), 200)
+    program.getAllUsers
+      .map(
+        allUsers => cask.Response(jsonify(JsonResponse(allUsers.toString())), 200)
+      )
+      .mapFutureFailure(returnInternalServerErrorOnFailure)
+      .awaitResult()
+  }
+
 
   initialize()
 }
 
 object UserEndpoints {
-  def make(programAlg: UserProgramAlg, logger: Logger): UserEndpoints = {
+  def make(programAlg: UserProgramAlg, logger: Logger)(implicit ec: ExecutionContext): UserEndpoints = {
     UserEndpoints(programAlg, logger)
   }
 }
