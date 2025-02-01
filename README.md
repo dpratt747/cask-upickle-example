@@ -15,6 +15,6 @@ curl --location --request GET 'http://127.0.0.1:8080/users' \
 ```
 
 ```bash
-curl --location --request GET 'http://127.0.0.1:8080/user/50c8f3e9-3419-49fd-bb4b-f7268fcb33ea' \
+curl --location --request GET 'http://127.0.0.1:8080/user/f066062b-b857-423c-bf0d-05ce9d2dd848' \
 --header 'Content-Type: application/json'
 ```

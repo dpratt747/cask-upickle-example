@@ -23,7 +23,7 @@ private class UserEndpoints(program: UserProgramAlg, logger: Logger) extends cas
   }
 
   @cask.getJson("/user/:userId")
-  def getUsers(userId: String) = {
+  def getUser(userId: String) = {
     logger.debug(s"[GET] /user/$userId request received")
     (for {
       userId <- convertToUserId(userId)
@@ -38,7 +38,7 @@ private class UserEndpoints(program: UserProgramAlg, logger: Logger) extends cas
   }
 
   @cask.getJson("/users")
-  def getUser() =
+  def getUsers() =
     logger.debug(s"[GET] /users request received")
     cask.Response(jsonify(JsonResponse(program.getAllUsers.toString())), 200)
 
