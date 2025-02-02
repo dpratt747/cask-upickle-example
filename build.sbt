@@ -4,7 +4,8 @@ ThisBuild / scalaVersion := "3.3.4"
 
 lazy val root = (project in file("."))
   .settings(
-      name := "CaskUpickleExample"
+    name := "CaskUpickleExample",
+    run / fork := true
   )
 
 lazy val caskVersion = "0.10.2"
