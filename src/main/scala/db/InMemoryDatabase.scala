@@ -12,7 +12,7 @@ trait DatabaseAlg {
   def getAllUsers: Future[scala.collection.mutable.Map[UserId, User]]
 }
 
-private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserId, User])(implicit val ec: ExecutionContext) extends DatabaseAlg {
+private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserId, User])(using ec: ExecutionContext) extends DatabaseAlg {
   override def insertUser(user: User): Future[Unit] =
     inMemoryStore.get(user.id) match
       case Some(user) =>
@@ -28,7 +28,7 @@ private class InMemoryDatabase(inMemoryStore: scala.collection.mutable.Map[UserI
 }
 
 object InMemoryDatabase {
-  def make(state: scala.collection.mutable.Map[UserId, User])(implicit ec: ExecutionContext): DatabaseAlg = {
+  def make(state: scala.collection.mutable.Map[UserId, User])(using ec: ExecutionContext): DatabaseAlg = {
     new InMemoryDatabase(state)
   }
 }

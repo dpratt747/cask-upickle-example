@@ -8,7 +8,7 @@ import ujson.Obj
 
 import scala.concurrent.ExecutionContext
 
-private class UserEndpoints(program: UserProgramAlg, logger: Logger)(implicit val ec: ExecutionContext) extends cask.Routes {
+private class UserEndpoints(program: UserProgramAlg, logger: Logger)(using ec: ExecutionContext) extends cask.Routes {
 
   @cask.postJson("/user")
   def postUser(user_id: ujson.Value, name: ujson.Value): Response[Obj] = {
@@ -53,12 +53,11 @@ private class UserEndpoints(program: UserProgramAlg, logger: Logger)(implicit va
       .awaitResult()
   }
 
-
   initialize()
 }
 
 object UserEndpoints {
-  def make(programAlg: UserProgramAlg, logger: Logger)(implicit ec: ExecutionContext): UserEndpoints = {
+  def make(programAlg: UserProgramAlg, logger: Logger)(using ec: ExecutionContext): UserEndpoints = {
     UserEndpoints(programAlg, logger)
   }
 }
